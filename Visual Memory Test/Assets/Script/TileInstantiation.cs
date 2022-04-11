@@ -8,7 +8,7 @@ public class TileInstantiation : MonoBehaviour
 
 
     public RectTransform panelRow;
-    public Transform grid;
+    public RectTransform grid;
     public GameObject block;
     public Transform cam;
     
@@ -21,6 +21,8 @@ public class TileInstantiation : MonoBehaviour
     bool tileHighlighting = false;
     bool gameStart = true;
     private int gameLevel = 3;
+    private int subLevel = 1;
+    private int highlightCount = 3;
     // float previousTime =0.0f;
 
     //Tile Values
@@ -50,6 +52,19 @@ public class TileInstantiation : MonoBehaviour
         allTiles  = new GameObject[row,column];
         RectTransform rowParent;
 
+        float parentWidth = grid.rect.width;
+        float parentHeight = grid.rect.height;
+
+        // Calculate Row Size
+        float rowHeight = parentWidth / (float)column;;
+        float rowWidth = parentHeight / (float)row;
+
+        // Calculate Cell size
+        float cellWidth = parentWidth / (float)column;
+        float cellHeight = parentHeight / (float)row;
+
+        Debug.Log("parentWidth" + parentWidth + "Cell Width" + cellWidth);
+
         // to check if it is odd
         bool IsOdd(int value)
         {
@@ -65,16 +80,15 @@ public class TileInstantiation : MonoBehaviour
 
                 rowParent = (RectTransform)Instantiate(panelRow);
                 rowParent.transform.SetParent(grid);
-                rowParent.transform.localScale = Vector3.one;
+                rowParent.transform.localScale = new Vector2(rowWidth,rowHeight);
 
                 for (int x=0; x<column; x++)
                 {
 
-
                     allTiles[x,y] = (GameObject)Instantiate(block);
                     allTiles[x,y].transform.SetParent(rowParent);
-                    allTiles[x,y].transform.localScale = Vector2.one; 
-                    states = "Game Start";
+                    allTiles[x,y].transform.localScale = new Vector2(cellWidth,cellHeight);
+                    // states = "Game Start";
                     // // Dynamic position of cells
                     // float colPos = x-column+v+1;
                     // float rowPos = y-row+v+1;
@@ -126,10 +140,22 @@ public class TileInstantiation : MonoBehaviour
         {
             Destroy(grid.GetChild(count).gameObject);
         }
-        row++;
-        column++;
-        gameLevel++;
-        CreateTiles();
+
+        if(subLevel < 3){
+            highlightCount++;
+            CreateTiles();
+            states = "Game Start";
+            subLevel++;
+        }
+        else{
+            row++;
+            column++;
+            highlightCount = row;
+            subLevel = 1;
+            CreateTiles();
+            states = "Game Start";
+        }
+ 
     }
 
     void TileHighlight(){
@@ -147,7 +173,7 @@ public class TileInstantiation : MonoBehaviour
         Debug.Log(column);
 
         int h = 0;
-        while(h<gameLevel){
+        while(h<highlightCount){
             int x = Random.Range(0,column);
             int y = Random.Range(0,row);
             if(allTiles[x,y].GetComponent<tileScript>().isTileHighlighted()){
@@ -194,6 +220,9 @@ public class TileInstantiation : MonoBehaviour
     }
 
 
+    void OnMouseDown(){
+        states = "Game Start";
+    }
 
 
     void ValidateSelection(){
@@ -239,7 +268,7 @@ public class TileInstantiation : MonoBehaviour
                 }
                 break;
             case "Game Select":
-                if(tileScript.selectedCount==gameLevel){
+                if(tileScript.selectedCount==highlightCount){
                     // Debug.Log(gameLevel);
                     // Debug.Log(selectedCount);
                     Debug.Log("Select Started");

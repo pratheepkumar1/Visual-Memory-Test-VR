@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 1541494003597420347}
   - component: {fileID: 1724900706372081850}
   - component: {fileID: 4717572785113097747}
+  - component: {fileID: -8660518693515507256}
   m_Layer: 0
   m_Name: Tile
   m_TagString: Untagged
@@ -34,8 +35,8 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -117,3 +118,23 @@ MonoBehaviour:
   Unselected: {fileID: 2100000, guid: 9cfb8173c7a2f452aa2a3803420341ad, type: 2}
   Selected: {fileID: 2100000, guid: 7a3dff4fd795a4400aab5463b68f367e, type: 2}
   Highlighted: {fileID: 2100000, guid: 8b200c90f952f4c41be4c24062b7d6eb, type: 2}
+--- !u!114 &-8660518693515507256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4901633286711500529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: -1
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: 1
+  m_FlexibleHeight: 1
+  m_LayoutPriority: 1
