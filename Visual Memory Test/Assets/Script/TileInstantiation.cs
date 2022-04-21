@@ -2,25 +2,34 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class TileInstantiation : MonoBehaviour 
 {
 
 
     public RectTransform panelRow;
-    public Transform grid;
+    public RectTransform grid;
+    public RectTransform livesGrid;
     public GameObject block;
+    public GameObject life;
+    public Button getStarted;
     public Transform cam;
     
     public int row = 3;
     public int column = 3;
     private GameObject[,] allTiles;
+    private GameObject[] allLives;
 
     float deltaTime= .0f;
     bool tileCreation = false;
     bool tileHighlighting = false;
     bool gameStart = true;
     private int gameLevel = 3;
+    private int subLevel = 1;
+    private int highlightCount = 3;
+    private int lives = 3;
     // float previousTime =0.0f;
 
     //Tile Values
@@ -29,7 +38,17 @@ public class TileInstantiation : MonoBehaviour
     private List<int[]> answerTiles;
     private int selectedCount = 0;
     public static string states;
-    
+
+
+    //Start Game:
+
+    void TaskOnClick()
+    {
+        states = "Game Start";
+        EventSystem.current.currentSelectedGameObject.SetActive(false);
+        CreateLives();
+    }
+
 
 
     void Awake() {
@@ -37,18 +56,29 @@ public class TileInstantiation : MonoBehaviour
         selectedTiles = new List<int[]>();
         answerTiles = new List<int[]>();
         CreateTiles();
+        getStarted.onClick.AddListener(TaskOnClick);        
     }
-//    void Start()
-//    {
-//        TileValueClear();
-//    }
-
 
 
     void CreateTiles(){
 
         allTiles  = new GameObject[row,column];
         RectTransform rowParent;
+
+        float parentWidth = grid.rect.width;
+        float parentHeight = grid.rect.height;
+
+        
+        // Calculate Row Size
+        float rowHeight = parentHeight / (float)column;;
+        float rowWidth = parentWidth / (float)row;
+
+        // Calculate Cell size
+        float cellWidth = parentWidth / (float)column;
+        float cellHeight = parentHeight / (float)row;
+
+
+        Debug.Log("parentWidth" + parentWidth + "Cell Width" + cellWidth);
 
         // to check if it is odd
         bool IsOdd(int value)
@@ -65,16 +95,15 @@ public class TileInstantiation : MonoBehaviour
 
                 rowParent = (RectTransform)Instantiate(panelRow);
                 rowParent.transform.SetParent(grid);
-                rowParent.transform.localScale = Vector3.one;
+                rowParent.transform.localScale = new Vector2(rowWidth,rowHeight);
 
                 for (int x=0; x<column; x++)
                 {
 
-
                     allTiles[x,y] = (GameObject)Instantiate(block);
                     allTiles[x,y].transform.SetParent(rowParent);
-                    allTiles[x,y].transform.localScale = Vector2.one; 
-                    states = "Game Start";
+                    allTiles[x,y].transform.localScale = new Vector2(cellWidth,cellHeight);
+                    states = "Game Rest";
                     // // Dynamic position of cells
                     // float colPos = x-column+v+1;
                     // float rowPos = y-row+v+1;
@@ -91,6 +120,20 @@ public class TileInstantiation : MonoBehaviour
         
         // cam.transform.position = new Vector3((float)row/2,(float)column/2,-5f * (float)row/1.5f );
         tileCreation = true;
+    }
+
+    void CreateLives()
+    {
+        allLives = new GameObject[3];
+        float xPosition = -3;
+
+        for (int i = 0; i < 3; i++)
+        {
+            allLives[i] = (GameObject)Instantiate(life);
+            allLives[i].transform.SetParent(livesGrid);
+            allLives[i].transform.Translate((float)xPosition, 0.0f, 0.0f);
+            xPosition += 3;
+        }
     }
 
     void TileValueClear(){
@@ -126,28 +169,40 @@ public class TileInstantiation : MonoBehaviour
         {
             Destroy(grid.GetChild(count).gameObject);
         }
-        row++;
-        column++;
-        gameLevel++;
-        CreateTiles();
+
+        if(subLevel < 3){
+            highlightCount++;
+            CreateTiles();
+            states = "Game Start";
+            subLevel++;
+        }
+        else{
+            row++;
+            column++;
+            highlightCount = row;
+            subLevel = 1;
+            CreateTiles();
+            states = "Game Start";
+        }
+ 
     }
 
-    void TileHighlight(){
+    //void TileHighlight(){
 
-    }
-
-
-    void TileSelection(){
+    //}
 
 
-    }
+    //void TileSelection(){
+
+
+    //}
 
     void RandomTileHighlight(){
         Debug.Log(row);
         Debug.Log(column);
 
         int h = 0;
-        while(h<gameLevel){
+        while(h<highlightCount){
             int x = Random.Range(0,column);
             int y = Random.Range(0,row);
             if(allTiles[x,y].GetComponent<tileScript>().isTileHighlighted()){
@@ -195,39 +250,71 @@ public class TileInstantiation : MonoBehaviour
 
 
 
-
     void ValidateSelection(){
-        
+
         // answerTiles = selectedTiles.Except(highlightedTiles).ToList();
+        bool isMatch = false;
+        int highlightCount = 0;
 
         foreach (var i in highlightedTiles)
         {
+            
             int var1 = i[0];
             int var2 = i[1];
             foreach(var j in selectedTiles){
                 int var21 = j[0];
                 int var22 = j[1];
                 if(var1 == var21 && var2 == var22){
-                Debug.Log("matching at position" + var2 + " " + var1);        
+                    isMatch = true;
+                    highlightCount++;
+                    break;
+                //Debug.Log("matching at position" + var2 + " " + var1);        
                 }
-            }   
+            }
+            
         }
-       
-            // bool tileAnswer = highlightedTiles.Contains(selectedTiles);
-            // Debug.Log(tileAnswer);
+
+        if (highlightCount != highlightedTiles.Count)
+        {
+            lives--;
+            allLives[lives].GetComponent<LivesFab>().KillLife();
+        }
+
+
+        // bool tileAnswer = highlightedTiles.Contains(selectedTiles);
+        // Debug.Log(tileAnswer);
+    }
+
+    bool IsGameOver()
+    {
+        if(lives == 0 || row > 6)
+        {
+            return true;
+        }
+
+        else
+        {
+            return false;
+        }
+        
     }
 
     void Update() {
-        deltaTime += Time.deltaTime;
-        
-        switch(states){
+        if (states != "Game Rest")
+        {
+            deltaTime += Time.deltaTime;
+        }
+        switch (states)
+        {
             case "Game Start":
-                if(tileCreation){
-                    if(gameStart){
-                    RandomTileHighlight();
-                    gameStart = false;
-                }
-                if (deltaTime > 2.5f && tileHighlighting == true)
+                if (tileCreation && deltaTime > 1.0f)
+                {
+                    if (gameStart)
+                    {
+                        RandomTileHighlight();
+                        gameStart = false;
+                    }
+                    if (deltaTime > 3.5f && tileHighlighting == true)
                     {
                         Debug.Log("Highlight Executed");
                         states = "Game Select";
@@ -239,7 +326,8 @@ public class TileInstantiation : MonoBehaviour
                 }
                 break;
             case "Game Select":
-                if(tileScript.selectedCount==gameLevel){
+                if (tileScript.selectedCount == highlightCount)
+                {
                     // Debug.Log(gameLevel);
                     // Debug.Log(selectedCount);
                     Debug.Log("Select Started");
@@ -247,20 +335,31 @@ public class TileInstantiation : MonoBehaviour
                     Debug.Log(deltaTime);
                     Debug.Log("Select Executed");
                     deltaTime = 0.0f;
-                    states = "Game Wait";
+                    states = "Game Validate";
                 }
                 break;
-            case "Game Wait":  
-                if(deltaTime > 2f){
+            case "Game Validate":
+                if (deltaTime > 2f)
+                {
                     Debug.Log("Validate Started");
                     ValidateSelection();
                     RoundReset();
-                    states = "Game Start";
-                    Debug.Log("Validate Executed");
+                    if (IsGameOver())
+                    {
+                        states = "Game Over";
+                        break;
+                    }
+                    else
+                    {
+                        RoundReset();
+                        states = "Game Start";
+                        Debug.Log("Validate Executed");
+                    }
+                    
                 }
                 break;
         }
-   }
+    }
 }
 
 
